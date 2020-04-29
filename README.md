@@ -46,7 +46,7 @@ setUp(scn.inject(
     ,nothingFor(15 seconds),rampUsers(10)during(10 seconds)
     ,nothingFor(30 seconds),rampUsers(5)during(10 seconds)
     ,nothingFor(15 seconds),rampUsers(10)during(10 seconds)
-    ,nothingFor(30 seconds), rampUsers(5)during(10 seconds)
+    ,nothingFor(30 seconds),rampUsers(5)during(10 seconds)
   )).protocols(httpConf).maxDuration(600 seconds)
 
 7) // throttling ( controling the throughput)
@@ -66,7 +66,7 @@ setUp(scn.inject(constantUsersPerSec(2) during (3 minutes)))
       <plugin>
         <groupId>io.gatling</groupId>
         <artifactId>gatling-maven-plugin</artifactId>
-        <version>${gatling-maven-plugin.version}</version>
+        <version>3.0.5</version>
       </plugin>
       
       
