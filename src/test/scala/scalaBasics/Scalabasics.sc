@@ -1,0 +1,1 @@
+var unitConsumed : Int=100
