@@ -1,10 +1,11 @@
 # Gatling_Stress_test_using_scala
 sample scala programs for Stress testing of APIs in Gatling tool.
 
-## GATLING FOR STRESS TESTING OF APIs
+### GATLING FOR STRESS TESTING OF APIs
 
-This project consist of sample programs in scala for Stress testing in Gatling tool.
-I've mainly focused on the API stress testing, and included few Web-socket connection testing as well.
+- This project consist of sample programs in scala for Stress testing in Gatling tool.
+- I've mainly focused on the API stress testing, and included few Web-socket connection testing as well.
+- Also I've built a custom influxdb docker image, where the graphite is pre-enabled, this will be useful for docker platform.
 
 ### Below are the list of functionality I've tried to cover.
 - Simple REST api call and status code validation.
@@ -73,3 +74,69 @@ setUp(scn.inject(constantUsersPerSec(2) during (3 minutes)))
    mvn gatling:test -Dgatling.simulationClass=<package>.<simulation class>
    ex: mvn gatling:test -Dgatling.simulationClass=mySimulations.FirstGatlingTest
 ```
+
+### Integrating gatling with Grafana using Influxdb
+Docker comes very handy while using Grafana with Influxdb, but the default Influxdb doesn't come with Graphite enabled.
+And its not that straight to use docker-compose with Grafana and Influxdb on Windows. So I've built a custom docker image having Graphite pre-enabled.
+- Use this image while using docker-compose.
+
+#### docker-compose file for reference.
+```
+version: "3"
+services:
+  influxdb:
+    image: katsdocker/influxdbwithgraphite
+    container_name: influxdb_datasource
+    restart: always
+    ports:
+      - 8086:8086
+      - 2003:2003
+    networks:
+      - metrics_network
+    volumes:
+      - influxdb-data:/var/lib/influxdb
+    command: influxd
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana_metrics
+    restart: always
+    ports:
+      - 3000:3000
+    networks:
+      - metrics_network
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+networks:
+  metrics_network:
+
+volumes:
+  grafana-volume:
+    external: true
+  influxdb-volume:
+    external: true
+```
+- Running above docker-compose file will quickly bring the Grafana and Influx with graphite enabled already.
+- Now make config changes in gatling.conf file to enable Graphite writer as shown below.
+```
+graphite {
+      light = false              # only send the all* stats
+      host = "localhost"         # The host where the Carbon server is located
+      port = 2003                # The port to which the Carbon server listens to (2003 is default for plaintext, 2004 is default for pickle)
+      protocol = "tcp"           # The protocol used to send data to Carbon (currently supported : "tcp", "udp")
+      rootPathPrefix = "gatling" # The common prefix of all metrics sent to Graphite
+      bufferSize = 8192          # Internal data buffer size, in bytes
+      writePeriod = 1            # Write period, in seconds
+    }
+```
+-Now execute the Gatling test, and once completed, login into influxdb container,
+```
+show databases;
+use gatlingdb;
+
+do a select * query on the tags to see all the metrics which are written into influxdb.
+```
+- Now load the grafana: http://localhost:8086, login using(admin/admin).
+- Add influxdb datasource to grafana.
+- Create Dashboard and create a graph using the predefined set of queries.
